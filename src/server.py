@@ -1,9 +1,9 @@
 import socket
 import threading
-import rap_model
+from rap_controller import RAP
 
 
-PORT = 6231
+PORT = 6232
 SERVER_IP = socket.gethostbyname_ex(socket.gethostname())[-1][-1]
 ADDR = (SERVER_IP, PORT)
 BUFFER_SIZE = 1024
@@ -19,23 +19,18 @@ SERVER = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
 def client_handling(conn_, addr_):
     print(f"[NEW CONNECTION] {addr_} started!")
-    conn_.send(f"OK Repository << {ID} >> Ready.\n".encode(ENCODING_FORMAT))
+    ## Creating an RAP instance 
+    conn_.send(f"OK Repository << {rap.id} >> Ready.\n".encode(ENCODING_FORMAT))
     ## The bufsize argument of 1024 used above is the maximum amount of data to be received at once.
     with conn_:
         while True:
             ## recving is blocking as well
             msg = (conn_.recv(BUFFER_SIZE).decode(ENCODING_FORMAT)).strip()
-            respond = rap_model.controller(msg)
-
-            # # TODO prettier messaging
-            # print(f"[{addr_}]: {msg}")
-            # if msg == "fin":
-            #     print(f"[{addr_}]: CONNECTION TERMINATED")
-            #     # TODO notify user
-            #     break
-            # # TODO prettier sending
+            respond = rap.controller(msg)
+            if respond == "FIN":
+                print(f"[{addr_}]: CONNECTION TERMINATED")
+                break
             conn_.send(f"{respond}\n".encode(ENCODING_FORMAT))
-        
 
 
 def start_server():
@@ -63,5 +58,6 @@ def stop_server(key):
 
 ## Now it's time to bind our socket to a address
 SERVER.bind(ADDR)
+rap = RAP(1)
 main_thread = threading.Thread(target=start_server)
 main_thread.start()
