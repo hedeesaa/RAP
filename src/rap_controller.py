@@ -7,36 +7,50 @@ class RAP:
         if self.__check_input(msg):
             command = msg.split()
             
-            if command[0] == "SET":
+            if command[0].upper() == "SET":
                 self.repo=rap_model.set_variable(command[1], int(command[2]),self.repo)
                 return "OK"
 
-            if command[0] == "ADD":
-                self.repo=rap_model.add_to_variable(command[1], int(command[2]),self.repo)
+            if command[0].upper() == "ADD":
+                self.repo, error=rap_model.add_to_variable(command[1], int(command[2]),self.repo)
+                if error:
+                    return "This Variable is not existed!"
                 return "OK"
 
-            if command[0] == "DELETE":
-                self.repo=rap_model.delete_variable(command[1],self.repo)
+            if command[0].upper() == "DELETE":
+                self.repo, error=rap_model.delete_variable(command[1],self.repo)
+                if error:
+                    return "This variable doesnt exist!"
                 return "OK"
+                
 
-            if command[0] == "LIST":
+            if command[0].upper() == "LIST":
                 keys=rap_model.list_keys(self.repo)
                 return keys
 
-            if command[0] == "GET":
-                return str(rap_model.get_value(command[1],self.repo))
+            if command[0].upper() == "GET":
+                value, error = rap_model.get_value(command[1],self.repo)
+                if error:
+                    return "This variable doesnt exist!"
+                return str(value)
 
-            if command[0] == "GET_VALUES":
-                return str(rap_model.get_values(command[1],self.repo))
+            if command[0].upper() == "GET_VALUES":
+                value, error = rap_model.get_values(command[1],self.repo)
+                if error:
+                    return "This variable doesnt exist!"
+                return str(value)
                 
-            if command[0] == "SUM":
-                return rap_model.sum_of_variable(command[1],self.repo)
+            if command[0].upper() == "SUM":
+                value, error = rap_model.sum_of_variable(command[1],self.repo)
+                if error:
+                    return "This variable doesnt exist!"
+                return value
 
-            if command[0] == "RESET":
+            if command[0].upper() == "RESET":
                 self.repo = rap_model.reset()
                 return "OK"
             
-            if command[0] == "FINISH":
+            if command[0].upper() == "FINISH":
                 return "FIN"
             
         return "[COMMAND IS NOT ACCEPTABLE] Eligible commands are FINISH, RESET, SUM, GET_VALUES, LIST, GET, DELETE, ADD"
@@ -47,7 +61,7 @@ class RAP:
         Returns True or False
         """
         if isinstance(msg, str):
-            command = msg.split()[0]
+            command = msg.split()[0].upper()
             if command in ["FINISH", "RESET", "SUM","GET_VALUES" , "LIST" , "GET", "DELETE", "ADD", "SET"]:
                 return True
             else:
