@@ -8,9 +8,6 @@ def add_to_variable(variable_, value_, repo__):
         repo__[variable_].append(value_)
     except:
         error = True
-
-    print(error)
-    
     return repo__, error
 
 def delete_variable(variable_, repo__):
