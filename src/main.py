@@ -1,6 +1,5 @@
 import server_class
 import sys
-import time 
 
 ## bring up the a server
 def server(port_):
