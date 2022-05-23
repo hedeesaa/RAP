@@ -2,6 +2,11 @@ import socket
 import threading
 
 class Server:
+    """
+    1- Creates a TCP Socket on a Specific port
+    2- Start the TCP Socket on a thread
+    3- Able to stop the TCP Socket and Thread
+    """
     def __init__(self,port=6231,ip=socket.gethostbyname_ex(socket.gethostname())[-1][-1]):
         self.addr = (ip, port)
         self.buffer_size = 1024
