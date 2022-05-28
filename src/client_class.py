@@ -1,3 +1,4 @@
+from operator import contains
 import threading
 
 class Client:
@@ -8,10 +9,12 @@ class Client:
         self.encoding_format = encoding_format
         self.buffer_size = buffer_size
         self.alive = True
+        self.action_function = lambda x: x
 
 
     def handler(self):
         print(f"[NEW CONNECTION] {self.addr[0]}:{self.addr[1]} started!")
+        self.greeting(f"Repository << {self.parent_name} >> Ready.")
         ## Creating an RAP instance 
         ## The bufsize argument of 1024 used above is the maximum amount of data to be received at once.
         with self.conn:
@@ -24,12 +27,14 @@ class Client:
                         self.alive = False
                         break
                     print(msg)
-                    respond = "hello"
+                    respond = self.action_function(msg)
+
                     self.conn.send(f"{respond}\n".encode(self.encoding_format))
-            except:
+            except Exception as e:
                 print(f"Connection {self.addr[0]}:{self.addr[1]} is closed")
 
-    def start(self):
+    def start(self,server_name):
+        self.parent_name = server_name
         self.client_thread = threading.Thread(target=self.handler)
         self.client_thread.start()
 
@@ -40,3 +45,10 @@ class Client:
     def is_alive(self):
         return self.alive
 
+    def action(self, action_function):
+        self.action_function = action_function
+
+    def greeting(self,string):
+        self.conn.send(f"{string}\n".encode(self.encoding_format))
+
+   
