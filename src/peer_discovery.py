@@ -6,8 +6,12 @@ class PeerDC:
 ## TODO Make peers find each other for proxy
 
     def __init__(self, server_name, port=6231):
-        self.addr = ('', port)
-        self.socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+        self.addr = ('0.0.0.0', port)
+        self.srv_host = socket.gethostbyname_ex(socket.gethostname())[-1][-1]
+        self.socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM,socket.IPPROTO_UDP)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.client_action = lambda x : x
         self.server_name = server_name
         self.bufferSize  = 1024
@@ -16,7 +20,7 @@ class PeerDC:
         self.server_thread = threading.Thread(target=self.listening)
         self.server_thread.start()
 
-## TODO make better response
+
     def listening(self):
         try:
             print(f"UDP server up and listening {self.addr[0]}:{self.addr[1]} ...")
@@ -24,25 +28,22 @@ class PeerDC:
             while True:
                 bytesAddressPair = self.socket.recvfrom(self.bufferSize)
                 
-                message = bytesAddressPair[0]
+
+                message = bytesAddressPair[0].decode("UTF-8")
                 address = bytesAddressPair[1]
 
-                clientMsg = "Message from Client:{}".format(message)
-                clientIP  = "Client IP Address:{}".format(address)
-    
-                print(clientMsg)
-                print(clientIP)
 
-                ip=socket.gethostbyname_ex(socket.gethostname())[-1][-1]
-                msgFromServer= f"I am from {ip}:{self.addr[1]}"
+                if message == "serverList":
+                    msgFromServer= f"ServerName: {self.server_name}, IP: {self.srv_host}:{self.addr[1]}"
+                else:
+                    msgFromServer = "Not-Valid: To receive list of servers type <<serverList>>"
 
+                print(f"[Info] Broadcast Reseponse: {msgFromServer}")  
                 bytesToSend= str.encode(msgFromServer)
-
-                self.socket.sendto(bytesToSend, address)
+                self.socket.sendto(bytesToSend, address)  
 
         except OSError:
-            print(f"Closing UDP")
-
-## TODO make better stop            
+            print(f"Closing UDP Server...")
+          
     def stop(self):
         self.socket.close()
