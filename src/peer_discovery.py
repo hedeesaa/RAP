@@ -1,26 +1,29 @@
 import socket
 import threading
+import json
 
 class PeerDC:
 ## TODO Make peer discovery, it just reponse the client
 ## TODO Make peers find each other for proxy
 
-    def __init__(self, server_name, port=6231):
+    def __init__(self, port=6231):
         self.addr = ('0.0.0.0', port)
-        self.srv_host = socket.gethostbyname_ex(socket.gethostname())[-1][-1]
         self.socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM,socket.IPPROTO_UDP)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
 
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.client_action = lambda x : x
-        self.server_name = server_name
         self.bufferSize  = 1024
 
     def start(self):
         self.server_thread = threading.Thread(target=self.listening)
         self.server_thread.start()
 
-
+    def set_server(self,server_name,srv_port):
+        self.server_name = server_name
+        self.srv_host = socket.gethostbyname_ex(socket.gethostname())[-1][-1]
+        self.srv_port = srv_port
+        
     def listening(self):
         try:
             print(f"UDP server up and listening {self.addr[0]}:{self.addr[1]} ...")
@@ -34,9 +37,19 @@ class PeerDC:
 
 
                 if message == "serverList":
-                    msgFromServer= f"ServerName: {self.server_name}, IP: {self.srv_host}:{self.addr[1]}"
+                    msgFromServer = {
+                        "ServerName": f"{self.server_name}",
+                        "IP": f"{self.srv_host}",
+                        "Port": self.srv_port,
+                        "Error": "None"
+                        }
+                    
                 else:
-                    msgFromServer = "Not-Valid: To receive list of servers type <<serverList>>"
+                    msgFromServer = {
+                        "Error": "Not-Valid: To receive list of servers type <<serverList>>"
+                    }
+                print(msgFromServer)
+                msgFromServer = json.dumps(msgFromServer)
 
                 print(f"[Info] Broadcast Reseponse: {msgFromServer}")  
                 bytesToSend= str.encode(msgFromServer)
