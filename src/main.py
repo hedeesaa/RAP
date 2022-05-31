@@ -20,8 +20,10 @@ def server(server_port_,peer_port_,server_name_):
     srv.start()
     print("For Stopping program enter <<ESC>>")
     keyboard_listener.join()
+    rap.sstop()
     srv.stop()
     peerDC.stop()
+
 
 
 def stopping_program(key):
