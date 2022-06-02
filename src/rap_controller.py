@@ -19,7 +19,8 @@ class RAP:
                 output = command[1].split(".")
                 if len(output) == 2:
                     new_command = command[0]+" "+output[1]+" "+command[-1]
-                    return self.send_package_to_peer(output[0],new_command)
+                    res, error = self.send_package_to_peer(output[0],new_command)
+                    return res
                 else:
                     self.repo=rap_model.set_variable(command[1], int(command[2]),self.repo)
                     return "OK"
@@ -29,7 +30,8 @@ class RAP:
                 if len(output) == 2:
                     new_command = command[0]+" "+output[1]+" "+command[-1]
                     error, result=self.look_if_peer_exists(output[0])
-                    return self.send_package_to_peer(output[0],new_command)
+                    res, error = self.send_package_to_peer(output[0],new_command)
+                    return  res
                 else:
                     self.repo, error=rap_model.add_to_variable(command[1], int(command[2]),self.repo)
                     if error:
@@ -41,7 +43,8 @@ class RAP:
                 if len(output) == 2:
                     new_command = command[0]+" "+output[1]
                     error, result=self.look_if_peer_exists(output[0])
-                    return self.send_package_to_peer(output[0],new_command)
+                    res, error = self.send_package_to_peer(output[0],new_command)
+                    return  res
                 else:
                     self.repo, error=rap_model.delete_variable(command[1],self.repo)
                     if error:
@@ -53,7 +56,8 @@ class RAP:
                 if len(command) == 2:
                     new_command = command[0]
                     error, result=self.look_if_peer_exists(command[1])
-                    return self.send_package_to_peer(command[1],new_command)
+                    res, error = self.send_package_to_peer(command[1],new_command)
+                    return  res
                 else:
                     keys=rap_model.list_keys(self.repo)
                     return keys
@@ -63,7 +67,8 @@ class RAP:
                 if len(output) == 2:
                     new_command = command[0]+" "+output[1]
                     error, result=self.look_if_peer_exists(output[0])
-                    return self.send_package_to_peer(output[0],new_command)
+                    res, error = self.send_package_to_peer(output[0],new_command)
+                    return res
                 else:
                     value, error = rap_model.get_value(command[1],self.repo)
                     if error:
@@ -75,7 +80,8 @@ class RAP:
                 if len(output) == 2:
                     new_command = command[0]+" "+output[1]
                     error, result=self.look_if_peer_exists(output[0])
-                    return self.send_package_to_peer(output[0],new_command)
+                    res, error = self.send_package_to_peer(output[0],new_command)
+                    return res
                 else:
                     value, error = rap_model.get_values(command[1],self.repo)
                     if error:
@@ -87,7 +93,8 @@ class RAP:
                 if len(output) == 2:
                     new_command = command[0]+" "+output[1]
                     error, result=self.look_if_peer_exists(output[0])
-                    return self.send_package_to_peer(output[0],new_command)
+                    res, error = self.send_package_to_peer(output[0],new_command)
+                    return res
                 else:
                     value, error = rap_model.sum_of_variable(command[1],self.repo)
                     if error:
@@ -98,7 +105,8 @@ class RAP:
                 if len(command) == 2:
                     new_command = command[0]
                     error, result=self.look_if_peer_exists(command[1])
-                    return self.send_package_to_peer(command[1],new_command)
+                    res, error = self.send_package_to_peer(command[1],new_command)
+                    return res
                 else:
                     self.repo = rap_model.reset()
                     return "OK"
@@ -106,7 +114,39 @@ class RAP:
             if command[0].upper() == "FINISH":
                 return "FIN"
             
-        return "[COMMAND IS NOT ACCEPTABLE] Eligible commands are FINISH, RESET, SUM, GET_VALUES, LIST, GET, DELETE, ADD"
+            if command[0].upper() == "DSUM":
+                output = command[command.index('including')+1:]
+                sums = []
+                for i in output:
+                    error, result=self.look_if_peer_exists(i)
+
+                    if error == None:
+                        print("I am in the error==none")
+                        new_command = "sum "+command[1]
+                        print(new_command)
+                        res, error = self.send_package_to_peer(i,new_command)
+                        a = int(error.strip())
+                        print(a)
+                        sums.append(a)
+                    else:
+                        return f"Peer {i} doesnt exist"
+                
+                return sum(sums)
+                
+
+                # if len(output) == 2:
+                #     new_command = command[0]+" "+output[1]
+                #     error, result=self.look_if_peer_exists(output[0])
+                #     return self.send_package_to_peer(output[0],new_command)
+                # else:
+                #     value, error = rap_model.sum_of_variable(command[1],self.repo)
+                #     if error:
+                #         return "This variable doesnt exist!"
+                #     return value
+
+                
+            
+        return "[COMMAND IS NOT ACCEPTABLE] Eligible commands are FINISH, RESET, SUM, GET_VALUES, LIST, GET, DELETE, ADD, DSUM"
 
     def __check_input(self, msg):
         """
@@ -115,7 +155,7 @@ class RAP:
         """
         if isinstance(msg, str):
             command = msg.split()[0].upper()
-            if command in ["FINISH", "RESET", "SUM","GET_VALUES" , "LIST" , "GET", "DELETE", "ADD", "SET"]:
+            if command in ["FINISH", "RESET", "SUM","GET_VALUES" , "LIST" , "GET", "DELETE", "ADD", "SET","DSUM"]:
                 return True
             else:
                 return False
@@ -182,9 +222,9 @@ class RAP:
                 sock.close()
 
                 s = result["ServerName"]
-                return f"From server: {s} : {res}"
+                return f"From server: {s} : {res}", res
             else:
-                return f"The {peer_name} doesnt exists!"
+                return f"The {peer_name} doesnt exists!","Error"
     def sstop(self):
         self.go = False
         
