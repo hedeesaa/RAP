@@ -7,6 +7,7 @@ import logging
 ##
 
 class RAP:
+    ERROR_VARIABLE_NOT_EXIST = "This Variable is not existed!"
     def __init__(self):
         self.repo = {}
         self.peers= []
@@ -40,7 +41,7 @@ class RAP:
                     else:
                         error, self.repo=rap_model.add_to_variable(command[1], int(command[2]),self.repo)
                         if error:
-                            return "This Variable is not existed!"
+                            return RAP.ERROR_VARIABLE_NOT_EXIST
                         return "OK"
                 return "[Error]: ADD variable value"
 
@@ -54,7 +55,7 @@ class RAP:
                     else:
                         error, self.repo=rap_model.delete_variable(command[1],self.repo)
                         if error:
-                            return "This variable doesnt exist!"
+                            return RAP.ERROR_VARIABLE_NOT_EXIST
                         return "OK"
                 return "[Error]: DELETE variable"
                 
@@ -79,7 +80,7 @@ class RAP:
                     else:
                         error, value = rap_model.get_value(command[1],self.repo)
                         if error:
-                            return "This variable doesnt exist!"
+                            return RAP.ERROR_VARIABLE_NOT_EXIST
                         return str(value)
                 return "[Error]: GET variable"
 
@@ -93,7 +94,7 @@ class RAP:
                     else:
                         error, value = rap_model.get_values(command[1],self.repo)
                         if error:
-                            return "This variable doesnt exist!"
+                            return RAP.ERROR_VARIABLE_NOT_EXIST
                         return str(value)
                 return "[Error]: GET_VALUES variable"
                 
@@ -107,7 +108,7 @@ class RAP:
                     else:
                         error, value = rap_model.sum_of_variable(command[1],self.repo)
                         if error:
-                            return "This variable doesnt exist!"
+                            return RAP.ERROR_VARIABLE_NOT_EXIST
                         return value
                 return "[Error]: SUM variable"
 
@@ -124,21 +125,18 @@ class RAP:
                 return "FIN"
             
             if command[0].upper() == "DSUM":
-                print("IN THE DSUM")
                 command[2] = "including".upper()
                 peers = command[command.index('INCLUDING')+1:]
 
                 sums = []
                 for peer in peers:
                     new_command = "sum "+command[1]
-                    print(peer)
-                    print(new_command)
                     error, res = self.send_package_to_peer(peer,new_command)
                     if error == None:
                         res = res.strip()
                         sums.append(int(res))
                     else:
-                        return f"Peer {peer} doesnt exist"
+                        return res
                 return sum(sums)
                 
                 
@@ -174,12 +172,9 @@ class RAP:
         try:
             
             # Send data
-            logging.info('sending: ' + message)
             sent = sock.sendto(message.encode("UTF-8"), server_address)
 
             # Receive response
-            logging.info('waiting to receive')
-            
             while True:
                 data, server = sock.recvfrom(4096)
                 data = data.decode("UTF-8")
@@ -210,10 +205,12 @@ class RAP:
             sock.send(command.encode('utf-8'))
             res = sock.recv(1024).decode('utf-8')
             sock.close()
-            
+            if res.strip() == RAP.ERROR_VARIABLE_NOT_EXIST:
+                return "Error", RAP.ERROR_VARIABLE_NOT_EXIST
+
             return None, res
         
-        return "Error", None
+        return "Error", f"Peer {peer} Does Not Exist"
 
     def sstop(self):
         self.go = False
