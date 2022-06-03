@@ -17,7 +17,7 @@ def server(server_port_,peer_port_,server_name_):
 
     peerDC = peer_discovery.PeerDC(port=peer_port_)
     peerDC.set_server(server_name_,server_port_)
-    peerDC.start()``
+    peerDC.start()
     
     srv = server_class.Server(port=server_port_,server_name=server_name_,keyboard_listener=keyboard_listener)
     srv.set_client_action(rap.controller)
