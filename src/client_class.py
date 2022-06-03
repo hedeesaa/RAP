@@ -1,5 +1,5 @@
-from operator import contains
 import threading
+import logging
 
 class Client:
 
@@ -13,7 +13,7 @@ class Client:
 
 
     def handler(self):
-        print(f"[NEW CONNECTION] {self.addr[0]}:{self.addr[1]} started!")
+        logging.info(f"[NEW CONNECTION] {self.addr[0]}:{self.addr[1]} started!")
         self.greeting(f"Repository << {self.parent_name} >> Ready.")
         ## Creating an RAP instance 
         ## The bufsize argument of 1024 used above is the maximum amount of data to be received at once.
@@ -23,15 +23,18 @@ class Client:
                 ## recving is blocking as well
                     msg = (self.conn.recv(self.buffer_size).decode(self.encoding_format)).strip()
                     if not msg: 
-                        print(f"[Terminated] Client {self.addr[0]}:{self.addr[1]} Terminated its Connection!")
+                        logging.info(f"[Terminated] Client {self.addr[0]}:{self.addr[1]} Terminated its Connection!")
                         self.alive = False
                         break
-                    print(msg)
+                    logging.info(msg)
                     respond = self.action_function(msg)
-
-                    self.conn.send(f"{respond}\n".encode(self.encoding_format))
+                    if respond == "FIN":
+                        self.conn.close()
+                        break
+                    else:
+                        self.conn.send(f"{respond}\n".encode(self.encoding_format))
             except Exception as e:
-                print(f"Connection {self.addr[0]}:{self.addr[1]} is closed")
+                logging.info(f"Connection {self.addr[0]}:{self.addr[1]} is closed")
 
     def start(self,server_name):
         self.parent_name = server_name
