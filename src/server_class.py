@@ -2,6 +2,7 @@ import socket
 import threading
 import client_class
 from rap_controller import RAP
+import logging
 
 class Server:
     """
@@ -20,7 +21,7 @@ class Server:
 
     def listening(self):
         try:
-            print(f"Server is Listening on {self.addr[0]}:{self.addr[1]} ...")
+            logging.info(f"Server is Listening on {self.addr[0]}:{self.addr[1]} ...")
             self.socket.bind(self.addr)
             self.socket.listen()
             while True:
@@ -30,7 +31,7 @@ class Server:
                 self.clients.append(client)
                 client.start(self.server_name)
         except OSError:
-            print(f"Closing Socket on {self.addr[0]}:{self.addr[1]}...")
+            logging.info(f"Closing Socket on {self.addr[0]}:{self.addr[1]}...")
             self.stop_yourself()
 
     def start(self):
@@ -38,7 +39,7 @@ class Server:
         self.server_thread.start()
 
     def stop(self):
-        print("Server is Going Down...")
+        logging.info("Server is Going Down...")
         for client in self.clients:
             if client.is_alive() == True:
                 client.stop()
