@@ -2,6 +2,7 @@ import socket
 import threading
 import json
 import logging
+##
 
 class ERAP:
 
@@ -12,14 +13,19 @@ class ERAP:
     BUFFERSIZE  = 1024
     ENCODING_METHOD = "UTF-8"
 
+    TIMEOUT = 5
+
     def __init__(self,server_name, server_port,port=6231):
         self.eport = port
         self.addr = ('0.0.0.0', self.eport)
         self.srv_name = server_name
         self.srv_host = socket.gethostbyname_ex(socket.gethostname())[-1][-1]
         self.srv_port = server_port
-
+        self.exit = threading.Event()
         self.peers = []
+
+        self.search =  threading.Thread(target=self.look_for_handler)
+        self.search.start()
 
     def start(self):
         self.server_thread = threading.Thread(target=self.listening)
@@ -56,13 +62,17 @@ class ERAP:
             ERAP.ESOCKET.close()
             
     def stop(self):
+        self.stop_look_for()
+        self.search.join()
         ERAP.ESOCKET.close()
+        self.server_thread.join()
+        logging.error("ERAP is Stopped")
 
     def look_for_peers(self):
         self.psocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM,socket.IPPROTO_UDP)
         self.psocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.psocket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        self.psocket.settimeout(10)
+        self.psocket.settimeout(ERAP.TIMEOUT)
 
         server_address = ('255.255.255.255', self.eport)
         message = "serverList"
@@ -80,7 +90,10 @@ class ERAP:
         except:
             self.psocket.close()
         finally:
-            logging.info(self.peers)
+            s = ""
+            for peer in self.peers:
+                s+="\n"+",".join("{}={}".format(*i) for i in peer.items())
+            logging.info(f"Peer List: "+s)
 
     def look_if_peer_exists(self,peer_name_):
         for peer in self.peers:
@@ -101,10 +114,18 @@ class ERAP:
             res = sock.recv(ERAP.BUFFERSIZE).decode(ERAP.ENCODING_METHOD)
             sock.close()
 
-            if res.strip() == "This Variable is not existed!":
-                return "Error", "This Variable is not existed!"
+            if res.strip() == "[ERROR]: This Variable is not existed!":
+                return "Error", f"[ERROR]: This Variable is not existed on {peer_name}!"
             return None, res
 
-        return "Error", f"Peer {peer} Does Not Exist"
+        return "Error", f"ERR Non-existence or ambiguous repository {peer_name}"
+
+    def look_for_handler(self):
+        while not self.exit.is_set():
+            self.look_for_peers()
+            self.exit.wait(ERAP.TIMEOUT)
+
+    def stop_look_for(self):
+        self.exit.set()
 
     

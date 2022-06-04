@@ -16,7 +16,6 @@ class Client:
         logging.info(f"[NEW CONNECTION] {self.addr[0]}:{self.addr[1]} started!")
         self.greeting(f"Repository << {self.parent_name} >> Ready.")
         ## Creating an RAP instance 
-        ## The bufsize argument of 1024 used above is the maximum amount of data to be received at once.
         with self.conn:
             try:
                 while True:
@@ -34,7 +33,7 @@ class Client:
                     else:
                         self.conn.send(f"{respond}\n".encode(self.encoding_format))
             except Exception as e:
-                logging.info(f"Connection {self.addr[0]}:{self.addr[1]} is closed")
+                logging.error(f"Connection {self.addr[0]}:{self.addr[1]} is closed")
 
     def start(self,server_name):
         self.parent_name = server_name
@@ -42,6 +41,7 @@ class Client:
         self.client_thread.start()
 
     def stop(self):
+        self.alive = False
         self.conn.send(f"Server is Closing the Connection\n".encode(self.encoding_format))
         self.conn.close()
     
