@@ -1,6 +1,12 @@
 from socket import *
 import sys
 
+"""
+It is a Test Client to send a UDP request
+Because nc in Mac doesnt support UPD broadcast request
+"""
+
+
 sock = socket(AF_INET, SOCK_DGRAM,IPPROTO_UDP)
 sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 sock.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
