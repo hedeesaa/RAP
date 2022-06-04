@@ -8,16 +8,20 @@ import coloredlogs, logging
 
 
 ## Bring Up the Server
-def server(server_port_,peer_port_,server_name_):
+def server(server_port_,server_name_,peer_port_):
     coloredlogs.install()
-    rap = RAP()
+    
 
     keyboard_listener = keyboard.Listener(on_press=stopping_program)
     keyboard_listener.start()
 
-    peerDC = peer_discovery.PeerDC(port=peer_port_)
-    peerDC.set_server(server_name_,server_port_)
-    peerDC.start()
+    if peer_port_ != None:
+        peerDC = peer_discovery.PeerDC(port=peer_port_)
+        peerDC.set_server(server_name_,server_port_)
+        peerDC.start()
+        rap = RAP(peerDC)
+    else:
+        rap = RAP(None)
     
     srv = server_class.Server(port=server_port_,server_name=server_name_,keyboard_listener=keyboard_listener)
     srv.set_client_action(rap.controller)
@@ -26,7 +30,8 @@ def server(server_port_,peer_port_,server_name_):
     keyboard_listener.join()
     rap.sstop()
     srv.stop()
-    peerDC.stop()
+    if peer_port_ != None:
+        peerDC.stop()
 
 
 ## ESC Keyboard
@@ -41,7 +46,11 @@ if __name__ == "__main__":
         server_port = int(sys.argv[1])
         peer_port = int(sys.argv[2])
         server_name = (sys.argv[3])
-        server(server_port,peer_port,server_name)
+        server(server_port,server_name,peer_port)
+    elif len(sys.argv) == 3:
+        server_port = int(sys.argv[1])
+        server_name = (sys.argv[2])
+        server(server_port,server_name,None)
     else:
         print("Error, Add Arguments: python3 main.py [server_port] [broadcast_port] [server_name]")
         

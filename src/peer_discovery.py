@@ -2,6 +2,7 @@ import socket
 import threading
 import json
 import logging
+import time
 
 class PeerDC:
 
@@ -13,6 +14,7 @@ class PeerDC:
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.client_action = lambda x : x
         self.bufferSize  = 1024
+        self.peers = []
 
     def start(self):
         self.server_thread = threading.Thread(target=self.listening)
@@ -59,3 +61,39 @@ class PeerDC:
           
     def stop(self):
         self.socket.close()
+
+    
+    def look_for_handler(self):
+        while self.go:
+            self.look_for_peers(6233)
+            logging.info(self.peers)
+            time.sleep(10)
+
+    def look_for_peers(self,port):
+        
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM,socket.IPPROTO_UDP)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        sock.settimeout(10)
+
+        server_address = ('255.255.255.255', port)
+        message = "serverList"
+
+        try:
+            
+            # Send data
+            _ = sock.sendto(message.encode("UTF-8"), server_address)
+
+            # Receive response
+            while True:
+                data, _ = sock.recvfrom(4096)
+                data = data.decode("UTF-8")
+                data = json.loads(data)
+                if data not in self.peers:
+                    self.peers.append(data)
+        except:
+            sock.close()
+            return self.peers
+        finally:	
+            sock.close()
+            return self.peers

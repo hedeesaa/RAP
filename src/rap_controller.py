@@ -1,6 +1,5 @@
 import rap_model
 import socket
-import json
 import threading
 import time
 import logging
@@ -8,12 +7,15 @@ import logging
 
 class RAP:
     ERROR_VARIABLE_NOT_EXIST = "This Variable is not existed!"
-    def __init__(self):
+    def __init__(self,erap):
         self.repo = {}
         self.peers= []
         self.go = True
-        self.search =  threading.Thread(target=self.look_for_handler)
-        self.search.start()
+        self.erap = erap
+        if erap != None:
+            self.search =  threading.Thread(target=self.look_for_handler)
+            self.search.start()
+        
 
     def controller(self, msg):
         if self.__check_input(msg):
@@ -155,37 +157,10 @@ class RAP:
 
     def look_for_handler(self):
         while self.go:
-            self.look_for_peers(6233)
+            self.peers = self.erap.look_for_peers(6233)
+            print("This is Peers: ")
             logging.info(self.peers)
             time.sleep(10)
-
-    def look_for_peers(self,port):
-        
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM,socket.IPPROTO_UDP)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        sock.settimeout(10)
-
-        server_address = ('255.255.255.255', port)
-        message = "serverList"
-
-        try:
-            
-            # Send data
-            sent = sock.sendto(message.encode("UTF-8"), server_address)
-
-            # Receive response
-            while True:
-                data, server = sock.recvfrom(4096)
-                data = data.decode("UTF-8")
-                data = json.loads(data)
-                if data not in self.peers:
-                    self.peers.append(data)
-        except:
-            sock.close()
-        finally:	
-            sock.close()
-
 
     def look_if_peer_exists(self,peer_name_):
         for peer in self.peers:
