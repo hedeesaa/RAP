@@ -6,11 +6,10 @@ It is a Test Client to send a UDP request
 Because nc in Mac doesnt support UPD broadcast request
 """
 
-
 sock = socket(AF_INET, SOCK_DGRAM,IPPROTO_UDP)
 sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 sock.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
-sock.settimeout(10)
+sock.settimeout(5)
 
 
 server_address = ('255.255.255.255', int(sys.argv[1]))
