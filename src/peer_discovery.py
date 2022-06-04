@@ -80,9 +80,31 @@ class ERAP:
         except:
             self.psocket.close()
         finally:
-            return self.peers
+            logging.info(self.peers)
 
-    def stop_look_for_peers(self):
-        self.psocket.close()
+    def look_if_peer_exists(self,peer_name_):
+        for peer in self.peers:
+            if peer["ServerName"] == peer_name_:
+                return None, peer
+        return "Error", None
+
+    def send_package_to_peer(self,peer_name,command):
+
+        error, peer=self.look_if_peer_exists(peer_name)
+
+        if error == None:
+
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.connect((peer["IP"], peer["Port"]))
+            res = sock.recv(ERAP.BUFFERSIZE)
+            sock.send(command.encode(ERAP.ENCODING_METHOD))
+            res = sock.recv(ERAP.BUFFERSIZE).decode(ERAP.ENCODING_METHOD)
+            sock.close()
+
+            if res.strip() == "This Variable is not existed!":
+                return "Error", "This Variable is not existed!"
+            return None, res
+
+        return "Error", f"Peer {peer} Does Not Exist"
 
     

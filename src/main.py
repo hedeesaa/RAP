@@ -25,7 +25,7 @@ def server(server_port_,server_name_,peer_port_):
     srv.start()
     logging.info("For Stopping the Program Enter <<ESC>>")
     keyboard_listener.join()
-    rap.sstop()
+    rap.stop()
     srv.stop()
     if peer_port_ != None:
         peerDC.stop()
