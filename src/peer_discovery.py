@@ -2,98 +2,87 @@ import socket
 import threading
 import json
 import logging
-import time
 
-class PeerDC:
+class ERAP:
 
-    def __init__(self, port=6231):
-        self.addr = ('0.0.0.0', port)
-        self.socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM,socket.IPPROTO_UDP)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+    ESOCKET = socket.socket(socket.AF_INET,socket.SOCK_DGRAM,socket.IPPROTO_UDP)
+    ESOCKET.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+    ESOCKET.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        self.client_action = lambda x : x
-        self.bufferSize  = 1024
+    BUFFERSIZE  = 1024
+    ENCODING_METHOD = "UTF-8"
+
+    def __init__(self,server_name, server_port,port=6231):
+        self.eport = port
+        self.addr = ('0.0.0.0', self.eport)
+        self.srv_name = server_name
+        self.srv_host = socket.gethostbyname_ex(socket.gethostname())[-1][-1]
+        self.srv_port = server_port
+
         self.peers = []
 
     def start(self):
         self.server_thread = threading.Thread(target=self.listening)
         self.server_thread.start()
-
-    def set_server(self,server_name,srv_port):
-        self.server_name = server_name
-        self.srv_host = socket.gethostbyname_ex(socket.gethostname())[-1][-1]
-        self.srv_port = srv_port
         
     def listening(self):
         try:
-            logging.info(f"UDP server up and listening {self.addr[0]}:{self.addr[1]} ...")
-            self.socket.bind(self.addr)
+            logging.info(f"UDP Server is Up and Listening {self.addr[0]}:{self.addr[1]} ...")
+            ERAP.ESOCKET.bind(self.addr)
             while True:
-                bytesAddressPair = self.socket.recvfrom(self.bufferSize)
-                
-
-                message = bytesAddressPair[0].decode("UTF-8")
-                address = bytesAddressPair[1]
-
+                ## Waiting for user
+                ## Blocking
+                message, address = ERAP.ESOCKET.recvfrom(ERAP.BUFFERSIZE)
+                message = message.decode(ERAP.ENCODING_METHOD)
 
                 if message == "serverList":
                     msgFromServer = {
-                        "ServerName": f"{self.server_name}",
+                        "ServerName": f"{self.srv_name}",
                         "IP": f"{self.srv_host}",
                         "Port": self.srv_port,
                         "Error": "None"
                         }
-                    
                 else:
                     msgFromServer = {
                         "Error": "Not-Valid: To receive list of servers type <<serverList>>"
                     }
-                logging.info(msgFromServer)
                 msgFromServer = json.dumps(msgFromServer)
 
-                logging.info(f"Broadcast Reseponse: {msgFromServer}")  
-                bytesToSend= str.encode(msgFromServer)
-                self.socket.sendto(bytesToSend, address)  
+                logging.info(f"BroadCast Reseponse: {msgFromServer}")
+                ERAP.ESOCKET.sendto(msgFromServer.encode(ERAP.ENCODING_METHOD), address)  
 
-        except OSError:
+        except:
             logging.error(f"Closing UDP Server...")
-          
+            ERAP.ESOCKET.close()
+            
     def stop(self):
-        self.socket.close()
+        ERAP.ESOCKET.close()
 
-    
-    def look_for_handler(self):
-        while self.go:
-            self.look_for_peers(6233)
-            logging.info(self.peers)
-            time.sleep(10)
+    def look_for_peers(self):
+        self.psocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM,socket.IPPROTO_UDP)
+        self.psocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.psocket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        self.psocket.settimeout(10)
 
-    def look_for_peers(self,port):
-        
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM,socket.IPPROTO_UDP)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        sock.settimeout(10)
-
-        server_address = ('255.255.255.255', port)
+        server_address = ('255.255.255.255', self.eport)
         message = "serverList"
 
         try:
-            
             # Send data
-            _ = sock.sendto(message.encode("UTF-8"), server_address)
-
+            self.psocket.sendto(message.encode(ERAP.ENCODING_METHOD), server_address)
             # Receive response
             while True:
-                data, _ = sock.recvfrom(4096)
-                data = data.decode("UTF-8")
+                data, _ = self.psocket.recvfrom(ERAP.BUFFERSIZE)
+                data = data.decode(ERAP.ENCODING_METHOD)
                 data = json.loads(data)
                 if data not in self.peers:
                     self.peers.append(data)
         except:
-            sock.close()
+            self.psocket.close()
+        finally:
             return self.peers
-        finally:	
-            sock.close()
-            return self.peers
+
+    def stop_look_for_peers(self):
+        self.psocket.close()
+
+    

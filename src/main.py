@@ -2,26 +2,23 @@ import server_class
 import sys
 from pynput import keyboard
 from rap_controller import RAP
-import peer_discovery
+from peer_discovery import ERAP
 import coloredlogs, logging
 ##
-
 
 ## Bring Up the Server
 def server(server_port_,server_name_,peer_port_):
     coloredlogs.install()
     
-
     keyboard_listener = keyboard.Listener(on_press=stopping_program)
     keyboard_listener.start()
 
     if peer_port_ != None:
-        peerDC = peer_discovery.PeerDC(port=peer_port_)
-        peerDC.set_server(server_name_,server_port_)
+        peerDC = ERAP(server_name_,server_port_,port=peer_port_)
         peerDC.start()
         rap = RAP(peerDC)
     else:
-        rap = RAP(None)
+        rap = RAP()
     
     srv = server_class.Server(port=server_port_,server_name=server_name_,keyboard_listener=keyboard_listener)
     srv.set_client_action(rap.controller)

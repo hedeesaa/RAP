@@ -7,14 +7,15 @@ import logging
 
 class RAP:
     ERROR_VARIABLE_NOT_EXIST = "This Variable is not existed!"
-    def __init__(self,erap):
+    def __init__(self,*args):
         self.repo = {}
         self.peers= []
         self.go = True
-        self.erap = erap
-        if erap != None:
-            self.search =  threading.Thread(target=self.look_for_handler)
-            self.search.start()
+        if len(args) == 1:
+            self.erap = args[0]
+            if args[0] != None:
+                self.search =  threading.Thread(target=self.look_for_handler)
+                self.search.start()
         
 
     def controller(self, msg):
@@ -157,7 +158,7 @@ class RAP:
 
     def look_for_handler(self):
         while self.go:
-            self.peers = self.erap.look_for_peers(6233)
+            self.peers = self.erap.look_for_peers()
             print("This is Peers: ")
             logging.info(self.peers)
             time.sleep(10)
