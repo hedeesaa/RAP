@@ -9,7 +9,7 @@ import coloredlogs, logging
 
 ## Bring Up the Server
 def server(server_port_,peer_port_,server_name_):
-
+    coloredlogs.install()
     rap = RAP()
 
     keyboard_listener = keyboard.Listener(on_press=stopping_program)
@@ -37,12 +37,11 @@ def stopping_program(key):
 
 ## main
 if __name__ == "__main__":
-    try:
-        coloredlogs.install()
+    if len(sys.argv) == 4:
         server_port = int(sys.argv[1])
         peer_port = int(sys.argv[2])
         server_name = (sys.argv[3])
         server(server_port,peer_port,server_name)
-    except:
+    else:
         print("Error, Add Arguments: python3 main.py [server_port] [broadcast_port] [server_name]")
         
