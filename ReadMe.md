@@ -1,3 +1,33 @@
+## How to Run Server:
+
+Part I:
+
+```
+python3 src/main.py <TCP_PORT>  <REPO_NAME>
+```
+
+Part II:
+
+```
+python3 src/main.py <TCP_PORT> <UDP_PORT> <REPO_NAME>
+```
+
+---
+
+A Simple UDP Client:
+
+```
+python3 client/client.py <Broadcast Port> <Command|serverList>
+```
+
+A Simple TCP Client:
+
+```
+while read x; do echo "$x" | nc <SERVER_IP> <SERVER_PORT> ; done < client/text_client.txt > client/output.txt
+```
+
+---
+
 refs:
 
 1. https://stackoverflow.com/questions/27893804/udp-client-server-socket-in-python
