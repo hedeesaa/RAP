@@ -14,6 +14,8 @@ python3 src/main.py <TCP_PORT> <UDP_PORT> <REPO_NAME>
 
 ---
 
+## Client:
+
 A Simple UDP Client:
 
 ```
@@ -28,7 +30,17 @@ while read x; do echo "$x" | nc <SERVER_IP> <SERVER_PORT> ; done < client/text_c
 
 ---
 
-refs:
+## UML
+
+```
+pyreverse -o png -p UML  -f ALL -A -S .
+```
+
+<img src="UML.jpg" title="UML Diagram" width="500" height="1000">
+
+---
+
+## References:
 
 1. https://stackoverflow.com/questions/27893804/udp-client-server-socket-in-python
 2. https://pythontic.com/modules/socket/udp-client-server-example
