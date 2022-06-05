@@ -1,2 +1,3 @@
 src/__pycache__/
 client/output.txt
+.DS_Store
