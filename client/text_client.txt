@@ -1,0 +1,4 @@
+set a 5
+add a 8
+set r2.a 9
+DSUM a including r1 r2
