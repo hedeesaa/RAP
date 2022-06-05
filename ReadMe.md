@@ -36,7 +36,7 @@ while read x; do echo "$x" | nc <SERVER_IP> <SERVER_PORT> ; done < client/text_c
 pyreverse -o png -p UML  -f ALL -A -S .
 ```
 
-<img src="UML.jpg" title="UML Diagram" width="500" height="1000">
+<img src="UML/UML.jpg" title="UML Diagram" width="500" height="1000">
 
 ---
 
